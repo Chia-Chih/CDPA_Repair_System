@@ -1,5 +1,5 @@
 from sqlalchemy.orm import joinedload
-import datetime as dt
+from sqlalchemy import desc
 
 
 
@@ -25,7 +25,7 @@ def convert_form2human_readable(form):
     formDict['updateTime'] = form.updateTime
     formDict['createUser'] = form.createUser
     formDict['dorm'] = form.dorm
-    formDict['roomNum'] = form.roomNum
+    formDict['roomNum'] = "{:03d}".format(form.roomNum)
     formDict['bedNum'] = form.bedNum
     formDict['ip'] = form.ip
     
@@ -70,8 +70,8 @@ def submit_admin_update_form(adminName, form):
 
 def get_repairForm_by_username(username):
     
-    formList = RepairForm.query.filter_by(createUser=username).all()
-    
+    formList = RepairForm.query.filter_by(createUser=username).order_by(desc(RepairForm.ID))
+   
     # convert status to human readable
     formList =  [ convert_form2human_readable(i) for i in formList ]
 
@@ -139,9 +139,10 @@ def check_is_already_have_same_username(username):
 
 def check_is_already_have_same_repairForm(form):
 
-    q = RepairForm.query.filter_by( dorm=form['dorm'], roomNum=form['roomNum'], bedNum=form['bedNum'] )
-    return db.session.query(q.exists()).scalar()
+    q = RepairForm.query.filter( RepairForm.dorm==form['dorm'], RepairForm.roomNum==form['roomNum'], RepairForm.bedNum==form['bedNum'], RepairForm.status!=2)
+    have_form =  db.session.query(q.exists()).scalar()
                                     
+    return have_form
 
 
 def update_user_email_auth(username, newAuth):

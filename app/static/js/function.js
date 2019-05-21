@@ -12,7 +12,8 @@ const ACTION = {
 	Forget : 6,		//忘記密碼
 	Home : 7,		//登入成功後首頁
 	Logout : 8,
-	ModifyRepair : 9
+	ModifyRepair : 9,
+	Constructing : 10
 };
 var action = ACTION.None;	// 0: Repair, 1: RepairStatus, 2: BannedList, 3: Tutorial, ...參照ACTION
 
@@ -25,7 +26,7 @@ const TYPE = {
 var type = TYPE.None;		// 0: Eazy, 1: QueryMACAddress, 2: QueryIPConflict
 
 // dictionary
-var trans = {};
+//var trans = {};
 
 /*
  * show "sign in" or "sign out"
@@ -46,9 +47,9 @@ function loginOut_ShowText(userStats) {
 /*
  * translate the content
  */
-function translate(language) {
+function translate(trans, lang) {
 	var transLang = "";
-	if(language == "zh") {
+	if(lang == "zh") {
 		transLang = "en";
 	}
 	else {
@@ -58,29 +59,48 @@ function translate(language) {
 		$("#lang a").attr("href", "?lang=" + transLang);
 		$("#lang a").text(trans[transLang]["LANG"]);
 		loginOut_ShowText(userStats);
-		$("#repair a").attr("href", "?action=Repair&lang=" + language);
-		$("#repair a").text(trans[language]["REQUEST"]);
-		$("#repairstatus a").attr("href", "?action=RepairStatus&lang=" + language);
-		$("#repairstatus a").text(trans[language]["PROGRESS"]);
-		$("#bannedlist a").attr("href", "?action=BannedList&lang=" + language);
-		$("#bannedlist a").text(trans[language]["BLOCKLIST"]);
+		$("#repair a").attr("href", "?action=Repair&lang=" + lang);
+		$("#repair a").text(trans[lang]["REQUEST"]);
+		$("#repairstatus a").attr("href", "?action=RepairStatus&lang=" + lang);
+		$("#repairstatus a").text(trans[lang]["PROGRESS"]);
+		$("#bannedlist a").attr("href", "?action=BannedList&lang=" + lang);
+		$("#bannedlist a").text(trans[lang]["BLOCKLIST"]);
 		$("#tutorial a").attr("href", "#");
-		$("#tutorial a").text(trans[language]["TUTORIAL"]);
-		$("#eazy").attr("href", "?action=Tutorial&type=Eazy&lang=" + language);
-		$("#eazy").text(trans[language]["TROUBLE"]);
+		$("#tutorial a").text(trans[lang]["TUTORIAL"]);
+		$("#eazy").attr("href", "?action=Tutorial&type=Eazy&lang=" + lang);
+		$("#eazy").text(trans[lang]["TROUBLE"]);
 		$("#lookupIP").attr({href:"http://www.cdpa.nsysu.edu.tw/lookUpIP.php", target:"_blank"});
-		$("#lookupIP").text(trans[language]["IPDIST"]);
-		$("#queryMAC").attr("href", "?action=Tutorial&type=QueryMACAddress&lang=" + language);
-		$("#queryMAC").text(trans[language]["MACADDR"]);
-		$("#queryIPConflict").attr("href", "?action=Tutorial&type=QueryIPConflict&lang=" + language);
-		$("#queryIPConflict").text(trans[language]["CONFLICT"]);
-		$("#home a").attr("href", "?lang=" + language);
-		$("#home a").text(trans[language]["HOME"]);
-		$("#content1 p").text(trans[language]["NOTICE1"]);
-		$("#content2 p").text(trans[language]["NOTICE2"]);
-		$("#content3 p").text(trans[language]["NOTICE3"]);
+		$("#lookupIP").text(trans[lang]["IPDIST"]);
+		$("#queryMAC").attr("href", "?action=Tutorial&type=QueryMACAddress&lang=" + lang);
+		$("#queryMAC").text(trans[lang]["MACADDR"]);
+		$("#queryIPConflict").attr("href", "?action=Tutorial&type=QueryIPConflict&lang=" + lang);
+		$("#queryIPConflict").text(trans[lang]["CONFLICT"]);
+		$("#home a").attr("href", "?lang=" + lang);
+		$("#home a").text(trans[lang]["HOME"]);
+		$("#content1 p").text(trans[lang]["NOTICE1"]);
+		$("#content2 p").text(trans[lang]["NOTICE2"]);
+		$("#content3 p").text(trans[lang]["NOTICE3"]);
 	});
 }
+
+
+
+var myid, mydorm, myroomNum, mybedNum, myip, mymac, mydescription;
+
+function parsing_modifyForm_arguments(tag, val) {
+
+		switch(tag) {
+				case 'id':		myid = val; 		break;
+				case 'dorm': 	mydorm = val;		break;
+				case 'roomNum': myroomNum = val;	break;
+				case 'bedNum':	mybedNum = val;		break;
+				case 'ip':		myip = val;			break;
+				case 'mac':		mymac = val;		break;
+				case 'description': mydescription = val; break;
+		}
+}
+
+
 
 /*
  * get URL parameters
@@ -139,6 +159,9 @@ function getQueryParam(is_authenticated) {
 					case "ModifyRepair":
 						action = ACTION.ModifyRepair;
 						break;
+					case "Constructing":
+						action = ACTION.Constructing;
+						break;
 				}
 			}
 			else if(paramsVal[0] == "type") {
@@ -151,6 +174,10 @@ function getQueryParam(is_authenticated) {
 				else if(paramsVal[1] == "QueryIPConflict") {
 					type = TYPE.QueryIPConflict;
 				}
+			}
+			else {
+				// for modify_form.html parsing arguments
+				parsing_modifyForm_arguments(paramsVal[0], paramsVal[1])
 			}
 		}
 		// page loading
@@ -223,11 +250,19 @@ function getQueryParam(is_authenticated) {
 				break;
 			case ACTION.ModifyRepair:
 				$(document).ready(function() {
-					$("#content").load("modify_form.html");
+					$("#content").load("modify_form.html?id="+myid + "&dorm="+mydorm + "&roomNum="+myroomNum + 
+											"&bedNum="+mybedNum + "&ip="+myip + "&mac="+mymac + 
+														"&description="+mydescription);
+				});
+				break;
+			case ACTION.Constructing:
+				$(document).ready(function() {
+					$("#content").load("under_construction.html");
 				});
 				break;
 		}
 	}
+	return language;
 }
 
 function goTop_Check() {
@@ -249,12 +284,4 @@ function goTop_Check() {
 	});
 }
 
-getQueryParam(userStats);
-/*
- * get the dictionary from trans.json
- */
-$.getJSON("https://api.github.com/gists/76f401c40cec86a1d05ab652fbfc72e3", function(data) {
-	trans = $.parseJSON(data["files"]["trans.json"].content);
-	translate(language);
-});
-goTop_Check();
+

@@ -8,6 +8,7 @@
 	報修單狀態(學生)
 	date		contributor		description
 	2019/1/25	chia-chih 		第一版
+	2019/2/23	imgc			設定了基本排版
 
 -->
 <body>
@@ -29,6 +30,19 @@ table, th, td {
 border: 1px solid black;
 text-align: center;
 }
+
+.form_status > table{
+	display:inline-block;
+	vertical-align:top;
+	margin:3px;
+}
+.form_status > table td{
+	padding-left:10px;
+	padding-right:10px;
+	min-width:80px;
+	word-wrap:break-word;
+}
+
 </style>
 
 <p> 已報修單數： {{ totalForm }}</p>
@@ -39,7 +53,7 @@ text-align: center;
 				<th>基本資訊</th>
 				<th>
 						{% if (formList[i].status == "尚未處理/Not process yet") %}
-						<a href={{ url_for("modify_form", dorm=formList[i].dorm, roomNum=formList[i].roomNum,
+						<a href={{ url_for("index", action='ModifyRepair', dorm=formList[i].dorm, roomNum=formList[i].roomNum,
 								bedNum=formList[i].bedNum, ip=formList[i].ip, mac=formList[i].mac, id=formList[i].ID,
 								description=formList[i].description ) }}>修改報修單</a>
 						{% endif %}
@@ -83,7 +97,7 @@ text-align: center;
 			</tr>
 			<tr>
 				<td>問題描述:</td>
-				<td>{{ formList[i]['description'] }}</td>
+				<td style="width:320px">{{ formList[i]['description'] }}</td>
 			</tr>
 			<tr>
 				<td>報修單狀態:</td>
@@ -93,29 +107,22 @@ text-align: center;
 
 		<table>
 			<tr>
-				{% if totalLogsInEachForm[i] == 0 %}
-				<td>網管回覆 （共{{ totalLogsInEachForm[i] }}則）:</td>
-				<td>無/None</td>
-			</tr>
-				{% else %}
-			<tr>
 				<td colspan="4">網管回覆 （共{{ totalLogsInEachForm[i] }}則）:</td>
 			</tr>
 			<tr>
 				<td>則數</td>
 				<td>處理時間</td>
-				<td>處理網管</td>
-				<td>回覆</td>
+				<td style="width:150px">處理網管</td>
+				<td style="width:200px">回覆</td>
 			</tr>
 			{% for j in range(totalLogsInEachForm[i]) %}
 			<tr>	
 				<td>第{{ j+1 }}則：</td>
 				<td>{{ logList[i][j].repairTime  }}</td>
 				<td>{{ logList[i][j].repairManName  }}</td>
-				<td>{{ logList[i][j].description  }}</td>
+				<td><pre>{{ logList[i][j].description  }}</td>
 			</tr>
 			{% endfor %}
-			{% endif %}
 		</table>
 		<br>
 		<br>
